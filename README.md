@@ -1,5 +1,7 @@
 # redirect-map-check
 
+**Website:** [itcrowd.work/tools/redirect-map-check](https://itcrowd.work/tools/redirect-map-check/) · free, open source (MIT), runs on your own computer.
+
 Check a website migration's redirects before and after launch. Give it the old sitemap and your redirect map; it follows every old URL and tells you which ones end in a 404, loop, chain through several hops, use a temporary redirect, land on the homepage or an unrelated page, or are missing from the map altogether.
 
 ```bash
