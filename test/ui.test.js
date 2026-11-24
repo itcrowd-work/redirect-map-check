@@ -43,6 +43,14 @@ function raw(path, { method = 'GET', headers = {}, body } = {}) {
 const t = () => ui.token;
 const get = (path, headers = {}) => raw(path, { headers: { 'x-rmc-token': t(), ...headers } });
 const b64 = (text) => Buffer.from(text).toString('base64');
+/** Wait until the previous check has fully stopped (cancelling one takes a moment). */
+async function idle() {
+  for (let i = 0; i < 100; i += 1) {
+    if (!JSON.parse((await get('/api/status')).body).busy) return;
+    await new Promise((r) => setTimeout(r, 20));
+  }
+  throw new Error('the previous check never stopped');
+}
 const post = (path, data, headers = {}) =>
   raw(path, {
     method: 'POST',
@@ -135,6 +143,7 @@ test('uploads are size-capped', async () => {
 
 test('a full check through the page: upload, progress, results, downloads, save', async () => {
   const map = await readFile(MAP);
+  await idle();
   const listening = waitForEvent(['done', 'error']);
   const res = await post('/api/run', {
     sitemaps: [`${demo.oldOrigin}/sitemap.xml`],
@@ -170,6 +179,7 @@ test('a full check through the page: upload, progress, results, downloads, save'
 });
 
 test('one check at a time; cancel stops a running check', async () => {
+  await idle();
   const listening = waitForEvent(['cancelled', 'done', 'error']);
   const first = await post('/api/run', { useDefaultMap: true, base: demo.newOrigin, delay: '1500', concurrency: '1' });
   assert.equal(first.status, 202, first.body);
@@ -187,6 +197,7 @@ test('the browser script never uses innerHTML', async () => {
 });
 
 test('two simultaneous starts: exactly one runs', async () => {
+  await idle();
   const listening = waitForEvent(['cancelled', 'done', 'error']);
   const body = { useDefaultMap: true, base: demo.newOrigin, delay: '1000', concurrency: '1' };
   const [a, b] = await Promise.all([post('/api/run', body), post('/api/run', body)]);
@@ -205,7 +216,8 @@ test('a dropped sitemap index can only reach files dropped with it', async () =>
   const index = (child) => b64(`<sitemapindex><sitemap><loc>${child}</loc></sitemap></sitemapindex>`);
 
   for (const child of [secret, '../../../../../../../../' + secret.replace(/^\//, '')]) {
-    const listening = waitForEvent(['done', 'error', 'cancelled']);
+    await idle();
+  const listening = waitForEvent(['done', 'error', 'cancelled']);
     assert.equal((await post('/api/run', { oldFiles: [{ name: 'index.xml', data: index(child) }], delay: '0' })).status, 202);
     const events = await listening;
     assert.equal(events.at(-1).type, 'error');
@@ -215,6 +227,7 @@ test('a dropped sitemap index can only reach files dropped with it', async () =>
 
   // Dropped together, under their own names, the index finds its child.
   const child = b64(`<urlset><url><loc>${demo.oldOrigin}/about</loc></url></urlset>`);
+  await idle();
   const listening = waitForEvent(['done', 'error', 'cancelled']);
   const res = await post('/api/run', {
     oldFiles: [{ name: 'sitemap-index.xml', data: index('pages.xml') }, { name: 'pages.xml', data: child }],
@@ -228,6 +241,7 @@ test('a dropped sitemap index can only reach files dropped with it', async () =>
 });
 
 test('uploads with path-like names stay in the upload folder', async () => {
+  await idle();
   const listening = waitForEvent(['done', 'error', 'cancelled']);
   const res = await post('/api/run', { mapFile: { name: '../../../../tmp/evil.csv', data: b64(`old,new\n${demo.oldOrigin}/about,${demo.newOrigin}/about\n`) }, delay: '0' });
   assert.equal(res.status, 202);
@@ -236,6 +250,7 @@ test('uploads with path-like names stay in the upload folder', async () => {
 });
 
 test('a cancel stops a slow crawl at once', async () => {
+  await idle();
   const listening = waitForEvent(['cancelled', 'done', 'error']);
   await post('/api/run', { useDefaultMap: true, base: demo.newOrigin, delay: '20000', concurrency: '1' });
   await new Promise((r) => setTimeout(r, 300));

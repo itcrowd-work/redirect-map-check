@@ -281,6 +281,7 @@ export async function startUi({ port = 0, open = true, defaults = {}, version = 
   let current = { events: [], recentUrls: [], status: 'idle' }; // the last (or running) check
   const clients = new Set();
   let busy = false; // reserved synchronously, so two requests can't both start a check
+  let stopping = false; // a cancel was asked for and the check is still winding down
   let actualPort = port;
   let launcherDir = null;
 
@@ -314,6 +315,8 @@ export async function startUi({ port = 0, open = true, defaults = {}, version = 
   };
 
   async function startRun(form) {
+    // A check that was just cancelled may take a moment to stop; wait for it rather than refuse.
+    for (let i = 0; i < 100 && busy && stopping; i += 1) await new Promise((r) => setTimeout(r, 20));
     if (busy) throw httpError(409, 'A check is already running. Cancel it first.');
     busy = true;
     let dir;
@@ -354,16 +357,19 @@ export async function startUi({ port = 0, open = true, defaults = {}, version = 
         await writeReports(run, state.reportDir, { version });
         state.status = 'done';
         busy = false; // before the event, so the page can start the next check straight away
+        stopping = false;
         emit(state, { type: 'done', summary: run.summary });
       })
       .catch((err) => {
         state.status = err?.code === 'ECANCELLED' || controller.signal.aborted ? 'cancelled' : 'failed';
         busy = false;
+        stopping = false;
         emit(state, state.status === 'cancelled' ? { type: 'cancelled', message: 'The check was cancelled.' } : { type: 'error', message: clean(err?.message ?? err) });
       })
       .finally(async () => {
         // Uploaded inputs are no longer needed; the reports stay until the next run or exit.
         busy = false;
+        stopping = false;
         await rm(inputs, { recursive: true, force: true });
       });
   }
@@ -424,6 +430,7 @@ export async function startUi({ port = 0, open = true, defaults = {}, version = 
       }
 
       if (req.method === 'GET' && path === '/api/defaults') return send(res, 200, publicDefaults(defaults));
+      if (req.method === 'GET' && path === '/api/status') return send(res, 200, { busy, status: current.status });
 
       if (req.method === 'GET' && path === '/api/events') {
         res.writeHead(200, { ...SECURITY_HEADERS, 'content-type': 'text/event-stream; charset=utf-8', connection: 'keep-alive' });
@@ -470,7 +477,10 @@ export async function startUi({ port = 0, open = true, defaults = {}, version = 
 
       if (req.method === 'POST' && path === '/api/cancel') {
         await readJson(req, 64 * 1024);
-        if (current.status === 'running') current.controller.abort();
+        if (current.status === 'running') {
+          stopping = true;
+          current.controller.abort();
+        }
         return send(res, 200, { ok: true });
       }
 
