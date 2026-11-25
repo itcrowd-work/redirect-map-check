@@ -84,7 +84,7 @@ export function recommendFix(issue, result, fx) {
       if (d.kind === 'robots-error') {
         return `${issue.detail}. Fix robots.txt on that host (it should answer 200 or 404), then re-run. Until then nothing about ${old} is known.`;
       }
-      return `robots.txt on ${toUrl(d.url ?? result.requestUrl)?.host ?? 'the site'} disallows ${where}, so we didn't request it. If you own the site (staging usually blocks crawlers), re-run with --ignore-robots.`;
+      return `robots.txt on ${toUrl(d.url ?? result.requestUrl)?.host ?? 'the site'} disallows ${where}, so we didn't request it. If you own the site (staging often blocks crawlers), re-run with --ignore-robots.`;
     }
 
     case 'not-found':
@@ -158,7 +158,7 @@ export function recommendFix(issue, result, fx) {
         return `${old} answers ${status} and has no redirect, but don't add the one in the map yet: ${row} is part of a loop (see the map-loop error). Point ${row} at a live page first, then add a 301 from ${old} to it.`;
       }
       if (expectedIsHome) {
-        return `${old} answers ${status} and has no redirect. The map sends it to the homepage, which search engines treat as a soft 404: add a 301 to the page that replaces it instead, and update ${row}.${suggestion(result, fx)}`;
+        return `${old} answers ${status} and has no redirect. The map sends it to the homepage, which Google says might be treated as a soft 404: add a 301 to the page that replaces it instead, and update ${row}.${suggestion(result, fx)}`;
       }
       if (expectedMissing) return `${old} answers ${status} and has no redirect. Add a 301 from ${old} to ${expected}, but publish ${expected} first: it answers ${probe.status} right now.`;
       if (status === 404 || status === 410) return `${old} answers ${status}: the redirect is missing. Add a 301 from ${old} to ${expected}${expectedLive ? ` (${expected} is live)` : ''}.`;
@@ -190,7 +190,7 @@ export function recommendFix(issue, result, fx) {
 
     case 'lands-on-homepage':
       if (expected) return `Send ${old} to ${expected}, as the map says, instead of the homepage.`;
-      return `Map ${old} to the page that replaces it instead of the homepage, or answer 410 if the content is gone for good.${suggestion(result, fx)}`;
+      return `Map ${old} to the page that replaces it instead of the homepage, or answer 404 or 410 if the content is gone for good.${suggestion(result, fx)}`;
 
     case 'map-conflict': {
       const rows = d.rows ?? [];
@@ -231,7 +231,7 @@ export function recommendFix(issue, result, fx) {
     }
 
     case 'mapped-to-homepage':
-      return `Map ${old} to the closest category or replacement page instead of the homepage, or answer 410 if the content is gone for good.${suggestion(result, fx)}`;
+      return `Map ${old} to the closest category or replacement page instead of the homepage, or answer 404 or 410 if the content is gone for good.${suggestion(result, fx)}`;
 
     case 'map-chain': {
       const end = d.end ? fx.short(toUrl(d.end, result.requestUrl)?.href ?? d.end) : 'the final URL';
