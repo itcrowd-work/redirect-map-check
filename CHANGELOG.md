@@ -1,6 +1,12 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## 0.1.1 (25 November 2026)
+
+- A deep URL mapped to the homepage is now one `mapped-to-homepage` warning. It no longer also gets a `map-chain` warning when the map has a row that keeps its URL (such as `/,/`), whose fix read "point straight at / instead of /". It also no longer gets a `content-mismatch` warning on top.
+- Wording matches the sources: the homepage checks say Google *might* treat such redirects as a soft 404 (as its site-move guide says), not that search engines do; chains cite Google's 10-hop limit instead of "leaking signal"; temporary redirects say what Google does with each type; `not-found` says a 404 or 410 is right for content that is gone for good; the homepage fixes offer 404 or 410; `not-redirected` no longer says the URL answers 200 when it may answer 404.
+- README: "always" and "usually" claims softened, and the note on JavaScript and meta-refresh redirects now repeats Google's advice instead of an unsourced claim.
+
+## 0.1.0 (24 November 2026)
 
 First release.
 
