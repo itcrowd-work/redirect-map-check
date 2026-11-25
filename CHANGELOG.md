@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2 (25 November 2026)
+
+- The HTML report's intro says "Errors are what to fix first, warnings are worth checking" instead of "Errors break the migration, warnings cost search signal": the old sentence claimed an effect on search that the tool can't show.
+
 ## 0.1.1 (25 November 2026)
 
 - A deep URL mapped to the homepage is now one `mapped-to-homepage` warning. It no longer also gets a `map-chain` warning when the map has a row that keeps its URL (such as `/,/`), whose fix read "point straight at / instead of /". It also no longer gets a `content-mismatch` warning on top.
