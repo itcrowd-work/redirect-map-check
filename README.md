@@ -14,7 +14,7 @@ Prefer a browser to the terminal? `npx redirect-map-check ui` opens a page where
 
 ## Why we built it
 
-We're [ITCrowd](https://itcrowd.work), and we move sites between platforms for a living: Webflow to Shopify, WordPress to custom code, one CMS to another. The redirect map is where migrations quietly lose traffic. A spreadsheet with a few hundred rows always has a typo, a target page nobody built, a rule that sends people to the homepage, or a 302 someone meant to be a 301. Search engines notice all of these.
+We're [ITCrowd](https://itcrowd.work), and we move sites between platforms for a living: Webflow to Shopify, WordPress to custom code, one CMS to another. The redirect map is where migrations quietly go wrong. In our experience a spreadsheet with a few hundred rows usually hides at least one typo, a target page nobody built, a rule that sends people to the homepage, or a 302 someone meant to be a 301. Visitors and search engine crawlers follow every one of those rules.
 
 We used to check them by hand. Now we run this before every launch and again the day after, and we've made it free for anyone doing the same job.
 
@@ -28,7 +28,7 @@ For every old URL (from the sitemap, a URL list, and the map itself), we follow 
 | `fetch-error` | error | DNS, TLS, timeout or connection failure, on the page or on its robots.txt. |
 | `sitemap-unread` | error | With `--allow-partial-sitemaps`: a child sitemap failed, so its URLs weren't checked. Fails the run even if everything else is clean. |
 | `rate-limited` | error | The server answered 429 and asked us to wait longer than 30 s. |
-| `not-found` | error | The chain ends in a 404 or 410. |
+| `not-found` | error | The chain ends in a 404 or 410. Right for content that is gone for good; check it was meant. |
 | `client-error` / `server-error` | error | The chain ends in another 4xx, or a 5xx. A 503 is retried once first. |
 | `redirect-loop` | error | The redirects send the URL back to itself. |
 | `too-many-redirects` | error | More hops than `--max-hops` (default 10). |
@@ -37,14 +37,14 @@ For every old URL (from the sitemap, a URL list, and the map itself), we follow 
 | `private-address` | error | A redirect or sitemap entry leads into a loopback, private or link-local address. We don't request it (see "Security"). |
 | `not-redirected` | error | The URL is in the map but has no redirect: it still answers on its own (200, 404…). |
 | `wrong-target` | error | The redirect ends somewhere other than the URL in the map. |
-| `lands-on-homepage` | error | A deep URL ends on `/` (or a language root like `/en/`). Search engines treat this as a soft 404. |
+| `lands-on-homepage` | error | A deep URL ends on `/` (or a language root like `/en/`). Google says redirects like this might be treated as a soft 404. |
 | `map-conflict` | error | The same old URL appears in the map twice with different targets. |
 | `map-loop` | error | Rows in the map send URLs to each other in a circle. |
 | `check-failed` | error | Something unexpected went wrong on this URL; the rest of the run carried on. |
 | `redirect-chain` | warning | More than one hop before the final page. |
 | `temporary-redirect` | warning | A 302, 303 or 307 where a migration needs a 301 or 308. |
 | `target-variant` | warning | Lands on the mapped page written differently (http/https, www, letter case, tracking parameters). Update the map. |
-| `content-mismatch` | warning | The new page's title and H1 share almost no words with the old page's. Usually a copy-paste slip in the map. |
+| `content-mismatch` | warning | The new page's title and H1 share almost no words with the old page's. Often a copy-paste slip in the map. |
 | `mapped-to-homepage` | warning | The map itself sends a deep URL to the homepage. |
 | `map-chain` | warning | A row points at an old URL that another row redirects again. |
 | `missing-from-map` | warning | An old URL has no row in the map and doesn't resolve to the same page. |
@@ -321,7 +321,7 @@ await writeReports(run, 'redirect-report');
 
 ## What it doesn't do
 
-- It doesn't run JavaScript, so redirects done in client-side JS or `<meta http-equiv="refresh">` aren't followed. (They also pass much less signal than a server redirect, which is worth knowing in itself.)
+- It doesn't run JavaScript, so redirects done in client-side JS or `<meta http-equiv="refresh">` aren't followed. (Google recommends server-side redirects where you can set them up: they're the type it's most likely to interpret correctly.)
 - The content check is a heuristic. It compares words in titles and H1s, ignoring words that appear on most pages of the site (like the brand name). It catches copy-paste slips well; it won't judge whether two related pages are a good match.
 - It checks the URLs you give it. If a page isn't in the old sitemap or the map, list it with `--urls`.
 

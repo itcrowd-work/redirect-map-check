@@ -339,6 +339,17 @@ test('M5: a cycle in the map is an error; a self-target is a notice; duplicates 
   assert.deepEqual(by['/x'], ['map-chain', 'map-duplicate']);
 });
 
+test('M5: a row that keeps its URL (/,/) does not turn rows pointing at it into chains', async () => {
+  const dir = await tmp();
+  const map = join(dir, 'map.csv');
+  await writeFile(map, 'old,new\n/,/\n/products/chair,/\n/faq,/faq\n/help,/faq\n');
+  const { targets } = await collectTargets({ map, oldBase: 'https://s.example' }, null, []);
+  const by = Object.fromEntries(targets.map((t) => [t.key, t.mapIssues.map((i) => i.type).sort()]));
+  assert.deepEqual(by['/'], ['map-self-target']);
+  assert.deepEqual(by['/products/chair'], []);
+  assert.deepEqual(by['/help'], []);
+});
+
 // ---- M7, M8: one problem, one issue; variants aren't wrong targets ----
 
 test('M7/M8: a mapped URL with no rule is only "not redirected"; http/www/case variants are a warning', () => {

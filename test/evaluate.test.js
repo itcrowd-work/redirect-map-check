@@ -54,6 +54,17 @@ test('404 target, wrong target, homepage', () => {
   assert.deepEqual(types(result({ old: '/', expected: '/', final: '/' })), []);
 });
 
+test('a deep URL mapped to the homepage is one warning, not also an unrelated page', () => {
+  const page = (title) => ({ title, h1: title });
+  const scorer = () => 0; // the homepage never shares the old page's words
+  const mapped = result({ expected: '/', final: '/', extra: { oldPage: page('Rattan armchair') } });
+  mapped.chain.page = page('Handmade wooden furniture');
+  assert.deepEqual(types(mapped, { scorer }), ['mapped-to-homepage']);
+  const other = result({ expected: '/c', final: '/c', extra: { oldPage: page('Rattan armchair') } });
+  other.chain.page = page('Oak dining table');
+  assert.deepEqual(types(other, { scorer }), ['content-mismatch']); // still checked everywhere else
+});
+
 test('temporary redirects and chains', () => {
   const hops = [
     { url: `${O}/a`, status: 302 },

@@ -161,8 +161,10 @@ export async function collectTargets(options, fetcher, notes) {
     let current = entry;
     let loop = false;
     for (let i = 0; i < 50; i += 1) {
-      const next = byId.get(siteKey(current.resolvedNew));
-      if (!next || next === current) break;
+      const key = siteKey(current.resolvedNew);
+      const next = byId.get(key);
+      // A row that keeps its URL (/,/ is common) doesn't redirect it again, so it can't make a chain.
+      if (!next || next === current || siteKey(next.resolvedNew) === key) break;
       if (path.includes(next)) {
         loop = next === entry;
         break;
@@ -467,7 +469,10 @@ export function evaluate(result, { minSimilarity, scorer, basePrefix = '' }) {
   let homepage = false;
   if (result.expectedUrl) {
     const expectedIsRoot = isRootLike(result.expectedUrl, basePrefix);
-    if (expectedIsRoot && !oldIsRoot) add('mapped-to-homepage', `Map row ${result.mapLine} → ${result.mapTarget}`);
+    if (expectedIsRoot && !oldIsRoot) {
+      add('mapped-to-homepage', `Map row ${result.mapLine} → ${result.mapTarget}`);
+      homepage = true; // the homepage warning already says the page doesn't match; no title check on top
+    }
     if (mappedNoRule && status < 500) {
       add('not-redirected', `Answers HTTP ${status} instead of redirecting to ${result.expectedUrl}`, { status });
     } else if (endUrl && redirects.length > 0 && !result.mapLoop) {

@@ -16,7 +16,7 @@ export const ISSUES = {
   'not-found': {
     severity: 'error',
     title: 'Ends in a 404 / 410',
-    fix: 'The redirect target does not exist. Build the page or point the redirect at the closest live page.',
+    fix: 'The URL ends on a page that does not exist. Build the page or point the redirect at the closest live page. If the content is gone for good with no replacement, a 404 or 410 is the right answer: keep it on purpose.',
   },
   'client-error': {
     severity: 'error',
@@ -71,7 +71,7 @@ export const ISSUES = {
   'not-redirected': {
     severity: 'error',
     title: 'In the map, but not redirected',
-    fix: 'The old URL still answers 200 on the new site. Add the redirect, or remove the row if the URL is meant to stay.',
+    fix: 'The old URL still answers on its own on the new site (200, 404…) instead of redirecting. Add the redirect, or remove the row if the URL is meant to stay.',
   },
   'wrong-target': {
     severity: 'error',
@@ -81,7 +81,7 @@ export const ISSUES = {
   'lands-on-homepage': {
     severity: 'error',
     title: 'Lands on the homepage',
-    fix: 'A deep URL is sent to the homepage, which search engines treat as a soft 404. Map it to the closest matching page.',
+    fix: 'A deep URL is sent to the homepage. Google says redirects like this might be treated as a soft 404. Map it to the closest matching page.',
   },
   'map-conflict': {
     severity: 'error',
@@ -101,12 +101,12 @@ export const ISSUES = {
   'redirect-chain': {
     severity: 'warning',
     title: 'Redirect chain (more than one hop)',
-    fix: 'Each extra hop slows users down and leaks a little signal. Redirect the old URL straight to the final URL.',
+    fix: 'Each extra hop is one more request before the page loads, and Google\'s crawlers follow at most 10 by default. Redirect the old URL straight to the final URL.',
   },
   'temporary-redirect': {
     severity: 'warning',
     title: 'Temporary redirect (302 / 303 / 307)',
-    fix: 'A migration should use permanent redirects (301 or 308) so search engines move the old URL\'s signals to the new one.',
+    fix: 'A migration should use permanent redirects (301 or 308). Google treats a permanent redirect as a sign to show the new URL in search, and a temporary one as a sign to keep showing the old URL.',
   },
   'content-mismatch': {
     severity: 'warning',
@@ -116,7 +116,7 @@ export const ISSUES = {
   'mapped-to-homepage': {
     severity: 'warning',
     title: 'Mapped to the homepage on purpose',
-    fix: 'Search engines usually treat this as a soft 404. Prefer the closest category or a 410 if the content is gone for good.',
+    fix: 'Google says redirects like this might be treated as a soft 404. Prefer the closest category, or a 404 or 410 if the content is gone for good.',
   },
   'map-chain': {
     severity: 'warning',
