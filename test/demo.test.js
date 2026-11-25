@@ -214,6 +214,9 @@ test('CLI: exit code 1 on errors, writes CSV, HTML and JSON, escapes HTML', asyn
   const html = await readFile(join(out, 'report.html'), 'utf8');
   assert.match(html, /Harbor &amp; Pine/);
   assert.match(html, /Recommended fix/);
+  // The intro says what each severity is for, not what it does to search (no claim the sources don't make).
+  assert.match(html, /Errors are what to fix first, warnings are worth checking/);
+  assert.doesNotMatch(html, /search signal/);
   assert.doesNotMatch(html, /Harbor & Pine/);
   assert.doesNotMatch(html, /<script/i);
   const json = JSON.parse(await readFile(join(out, 'results.json'), 'utf8'));

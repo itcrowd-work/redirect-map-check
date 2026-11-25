@@ -176,7 +176,7 @@ ${baseCss()}
     <div class="padding-global"><div class="container-large is-framed"><div class="section_inner">
       <p class="text-style-eyebrow">Redirect report</p>
       <h1 class="heading-style-h1 hero_title">${esc(headline(s))}</h1>
-      <p class="hero_lead">We followed every old URL from the sitemap and the redirect map${s.base ? ` against <b>${esc(s.base)}</b>` : ''}. Errors break the migration, warnings cost search signal, notices are for your information.${s.urlsUnchecked ? ` ${s.urlsUnchecked} URL${s.urlsUnchecked === 1 ? '' : 's'} could not be checked and count as errors, never as clean.` : ''}</p>
+      <p class="hero_lead">We followed every old URL from the sitemap and the redirect map${s.base ? ` against <b>${esc(s.base)}</b>` : ''}. Errors are what to fix first, warnings are worth checking, notices are for your information.${s.urlsUnchecked ? ` ${s.urlsUnchecked} URL${s.urlsUnchecked === 1 ? '' : 's'} could not be checked and count as errors, never as clean.` : ''}</p>
       <p class="hero_meta text-style-mono"><span>${fmtDate(s.generatedAt)}</span><span>${s.requests} requests</span><span>${seconds} s</span></p>
     </div></div></div>
   </section>
