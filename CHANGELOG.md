@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.0 (unreleased)
+
+- New subpath exports for other tools: `redirect-map-check/inputs`, `/csv`, `/url`, `/http`, `/content` and `/report-style`. The README lists the names they promise; everything else stays internal and can't be imported. Nothing else changes: the same inputs give the same results as 0.1.2.
+
 ## 0.1.2 (25 November 2026)
 
 - The HTML report's intro says "Errors are what to fix first, warnings are worth checking" instead of "Errors break the migration, warnings cost search signal": the old sentence claimed an effect on search that the tool can't show.

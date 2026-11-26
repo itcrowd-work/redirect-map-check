@@ -1,6 +1,6 @@
 {
   "name": "redirect-map-check",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Check a website migration's 301 redirect map before and after launch: 404s, redirect chains, loops, 302s, redirects to the homepage or an unrelated page, and old URLs missing from the map.",
   "type": "module",
   "bin": {
@@ -8,7 +8,14 @@
   },
   "main": "src/index.js",
   "exports": {
-    ".": "./src/index.js"
+    ".": "./src/index.js",
+    "./inputs": "./src/inputs.js",
+    "./csv": "./src/csv.js",
+    "./url": "./src/url.js",
+    "./http": "./src/http.js",
+    "./content": "./src/content.js",
+    "./report-style": "./src/report/style.js",
+    "./package.json": "./package.json"
   },
   "files": [
     "bin/",
