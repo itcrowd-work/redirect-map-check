@@ -106,6 +106,10 @@ test('promised members: Fetcher, loadSitemapUrls, loadText and parseRedirectMap'
     assert.equal(robots.errorCode, 'EROBOTS');
     const offsite = await fetcher.follow(`${base}/hop`, { wantBody: true, checkRobots: false });
     assert.equal(offsite.errorCode, 'EPRIVATE', 'a host you did not name, on a private address, is refused');
+    const offsiteRobots = await fetcher.follow(`${base}/hop`, { wantBody: true, checkRobots: true });
+    assert.equal(offsiteRobots.errorCode, 'EROBOTS');
+    assert.equal(offsiteRobots.blocked.kind, 'private', 'with checkRobots the guard shows as blocked.kind');
+    assert.equal(robots.blocked.kind, 'disallowed');
     assert.ok(fetcher.requestCount >= 3);
     assert.equal(typeof fetcher.requestCount, 'number');
 

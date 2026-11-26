@@ -334,7 +334,7 @@ The promise covers these members too:
 
 | Name | Promised members |
 |---|---|
-| `Fetcher` | Options `userAgent`, `productToken`, `concurrency`, `delayMs`, `timeoutMs`, `retries`, `respectRobots`, `allowPrivateNetwork`, `notes`. Methods `trustHost(url)` (allow a host you named, even on a private address), `follow(url, { wantBody, checkRobots })` and `close()`; the `requestCount` property. `follow` returns `status` (0 when no response), `body`, `contentType`, and `errorCode` when it fails (`EROBOTS` blocked by robots.txt, `EPRIVATE` a private address you didn't name, among others). |
+| `Fetcher` | Options `userAgent`, `productToken`, `concurrency`, `delayMs`, `timeoutMs`, `retries`, `respectRobots`, `allowPrivateNetwork`, `notes`. Methods `trustHost(url)` (allow a host you named, even on a private address), `follow(url, { wantBody, checkRobots })` and `close()`; the `requestCount` property. `follow` returns `status` (0 when no response), `body`, `contentType`, and `errorCode` when it fails (`EPRIVATE` a private address you didn't name, among others). With `checkRobots: true` a page we may not fetch comes back as `EROBOTS` with `blocked.kind`: `disallowed` (robots.txt says no), `robots-error` (robots.txt answered 5xx or 429), `private` (the host is a private address you didn't name) or `unreachable` (robots.txt couldn't be fetched). |
 | `loadSitemapUrls(source, fetcher, options)` | Returns the URLs. Options `notes` (an array that receives notes) and `entrySources` (an array that receives `{ from, locs }` for each sitemap file read). |
 | `loadText(source, fetcher, { notes })` | Returns the text of a local file or a URL. |
 | `parseRedirectMap(text)` | Returns `entries` (`{ old, new, line }`), `problems` (`{ line, message }`) and `delimiter`. |
