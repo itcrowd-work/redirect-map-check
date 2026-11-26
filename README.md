@@ -319,6 +319,19 @@ console.log(run.summary.byType);
 await writeReports(run, 'redirect-report');
 ```
 
+Since 0.2.0 the building blocks are importable on their own, for other tools that read the same inputs (our [redirect-map-plan](https://github.com/itcrowd-work/redirect-map-plan) uses them):
+
+| Import | What you get |
+|---|---|
+| `redirect-map-check/inputs` | `loadText`, `decodeText`, `parseSitemap`, `loadSitemapUrls`, `parseUrlList`, `parseRedirectMap`: sitemaps (indexes, gzip, local or remote), URL lists and redirect maps, read exactly as the checker reads them |
+| `redirect-map-check/csv` | `detectDelimiter`, `parseCsv`, `parseCsvDetailed`, `toCsv` (with the spreadsheet-formula guard) |
+| `redirect-map-check/url` | `toUrl`, `isRelative`, `looksLikeUrl`, `normalizeUrl`, `pathKey`, `sameUrl`, `isRootLike`, `foldHost` |
+| `redirect-map-check/http` | `Fetcher` (polite, robots-aware, with the private-network guard) and `isPrivateAddress` |
+| `redirect-map-check/content` | `decodeHtml`, `extractPageInfo`, `tokenize`, `slugTokens`, `slugSimilarity`, `createScorer`, `similarity`, `matchScore` |
+| `redirect-map-check/report-style` | `baseCss`, `BRAIN`, `fonts`: the report's look, for reports that should match it |
+
+These names are a promise: they change only in a new minor version, with a CHANGELOG entry. Anything else in those files, and any file not listed here, is internal and may change in any release (Node refuses imports of files outside this list).
+
 ## What it doesn't do
 
 - It doesn't run JavaScript, so redirects done in client-side JS or `<meta http-equiv="refresh">` aren't followed. (Google recommends server-side redirects where you can set them up: they're the type it's most likely to interpret correctly.)
