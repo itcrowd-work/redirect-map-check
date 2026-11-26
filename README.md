@@ -330,7 +330,17 @@ Since 0.2.0 the building blocks are importable on their own, for other tools tha
 | `redirect-map-check/content` | `decodeHtml`, `extractPageInfo`, `tokenize`, `slugTokens`, `slugSimilarity`, `createScorer`, `similarity`, `matchScore` |
 | `redirect-map-check/report-style` | `baseCss`, `BRAIN`, `fonts`: the report's look, for reports that should match it |
 
-These names are a promise: they change only in a new minor version, with a CHANGELOG entry. Anything else in those files, and any file not listed here, is internal and may change in any release (Node refuses imports of files outside this list).
+The promise covers these members too:
+
+| Name | Promised members |
+|---|---|
+| `Fetcher` | Options `userAgent`, `productToken`, `concurrency`, `delayMs`, `timeoutMs`, `retries`, `respectRobots`, `allowPrivateNetwork`, `notes`. Methods `trustHost(url)` (allow a host you named, even on a private address), `follow(url, { wantBody, checkRobots })` and `close()`; the `requestCount` property. `follow` returns `status` (0 when no response), `body`, `contentType`, and `errorCode` when it fails (`EROBOTS` blocked by robots.txt, `EPRIVATE` a private address you didn't name, among others). |
+| `loadSitemapUrls(source, fetcher, options)` | Returns the URLs. Options `notes` (an array that receives notes) and `entrySources` (an array that receives `{ from, locs }` for each sitemap file read). |
+| `loadText(source, fetcher, { notes })` | Returns the text of a local file or a URL. |
+| `parseRedirectMap(text)` | Returns `entries` (`{ old, new, line }`), `problems` (`{ line, message }`) and `delimiter`. |
+| `parseUrlList(text)` | Returns the URLs, one per line, without blank lines or `#` comments. |
+
+These names and members are a promise: they change only in a new minor version, with a CHANGELOG entry. Anything else in those files, and any file not listed here, is internal and may change in any release (Node refuses imports of files outside this list). A test fails if a subpath gains an export that is neither promised nor listed as internal.
 
 ## What it doesn't do
 
