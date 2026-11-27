@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 (unreleased)
+## 0.2.0 (27 November 2026)
 
 - Requires Node.js 22 or newer (was 20). Node.js 20 reached end of life on 30 April 2026 and gets no more security fixes; CI now tests Node 22, 24 and 26.
 
