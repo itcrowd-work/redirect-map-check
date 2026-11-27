@@ -2,6 +2,8 @@
 
 ## 0.2.0 (unreleased)
 
+- Requires Node.js 22 or newer (was 20). Node.js 20 reached end of life on 30 April 2026 and gets no more security fixes; CI now tests Node 22, 24 and 26.
+
 - New subpath exports for other tools: `redirect-map-check/inputs`, `/csv`, `/url`, `/http`, `/content` and `/report-style`. The README lists the names they promise, and the Fetcher, loadSitemapUrls, loadText and parseRedirectMap members (options, methods, result fields, including `blocked.kind` when `checkRobots` refuses a page) other tools rely on; everything else stays internal and can't be imported. Tests cover the promised members and fail when a subpath gains an export nobody decided on. Nothing else changes: the same inputs give the same results as 0.1.2.
 
 ## 0.1.2 (25 November 2026)
