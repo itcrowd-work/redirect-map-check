@@ -7,6 +7,7 @@
 - New subpath exports for other tools: `redirect-map-check/inputs`, `/csv`, `/url`, `/http`, `/content` and `/report-style`. The README lists the names they promise, and the Fetcher, loadSitemapUrls, loadText and parseRedirectMap members (options, methods, result fields, including `blocked.kind` when `checkRobots` refuses a page) other tools rely on; everything else stays internal and can't be imported. Tests cover the promised members and fail when a subpath gains an export nobody decided on.
 
 - A sitemap index read from the web can only point at web addresses. A child like `file:///etc/passwd` or a bare path used to be read as a file on your computer (it failed only when no such file existed in the folder you ran from); now it counts as a child sitemap that can't be read. Found in a QA review of redirect-map-plan, 27 Nov 2026.
+- CI actions are pinned to commit IDs (checkout v7.0.1, setup-node v7.1.0) instead of the moving `v7` tags.
 - `loadSitemapUrls` takes a `partialHint` option, so a tool without `--allow-partial-sitemaps` can say something else at the end of the error. The checker's own message is unchanged.
 
 ## 0.1.2 (25 November 2026)
