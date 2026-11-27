@@ -350,7 +350,7 @@ These names and members are a promise: they change only in a new minor version, 
 
 ## Development
 
-Node.js 20 or newer, no runtime dependencies.
+Node.js 22 or newer, no runtime dependencies.
 
 ```bash
 npm test        # unit tests + end-to-end tests against the demo sites
