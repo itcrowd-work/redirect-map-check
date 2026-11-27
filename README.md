@@ -319,6 +319,29 @@ console.log(run.summary.byType);
 await writeReports(run, 'redirect-report');
 ```
 
+Since 0.2.0 the building blocks are importable on their own, for other tools that read the same inputs (our [redirect-map-plan](https://github.com/itcrowd-work/redirect-map-plan) uses them):
+
+| Import | What you get |
+|---|---|
+| `redirect-map-check/inputs` | `loadText`, `decodeText`, `parseSitemap`, `loadSitemapUrls`, `parseUrlList`, `parseRedirectMap`: sitemaps (indexes, gzip, local or remote), URL lists and redirect maps, read exactly as the checker reads them |
+| `redirect-map-check/csv` | `detectDelimiter`, `parseCsv`, `parseCsvDetailed`, `toCsv` (with the spreadsheet-formula guard) |
+| `redirect-map-check/url` | `toUrl`, `isRelative`, `looksLikeUrl`, `normalizeUrl`, `pathKey`, `sameUrl`, `isRootLike`, `foldHost` |
+| `redirect-map-check/http` | `Fetcher` (polite, robots-aware, with the private-network guard) and `isPrivateAddress` |
+| `redirect-map-check/content` | `decodeHtml`, `extractPageInfo`, `tokenize`, `slugTokens`, `slugSimilarity`, `createScorer`, `similarity`, `matchScore` |
+| `redirect-map-check/report-style` | `baseCss`, `BRAIN`, `fonts`: the report's look, for reports that should match it |
+
+The promise covers these members too:
+
+| Name | Promised members |
+|---|---|
+| `Fetcher` | Options `userAgent`, `productToken`, `concurrency`, `delayMs`, `timeoutMs`, `retries`, `respectRobots`, `allowPrivateNetwork`, `notes`. Methods `trustHost(url)` (allow a host you named, even on a private address), `follow(url, { wantBody, checkRobots })` and `close()`; the `requestCount` property. `follow` returns `status` (0 when no response), `body`, `contentType`, and `errorCode` when it fails (`EPRIVATE` a private address you didn't name, among others). With `checkRobots: true` a page we may not fetch comes back as `EROBOTS` with `blocked.kind`: `disallowed` (robots.txt says no), `robots-error` (robots.txt answered 5xx or 429), `private` (the host is a private address you didn't name) or `unreachable` (robots.txt couldn't be fetched). |
+| `loadSitemapUrls(source, fetcher, options)` | Returns the URLs. Options `notes` (an array that receives notes), `entrySources` (an array that receives `{ from, locs }` for each sitemap file read) and `partialHint` (the advice at the end of the error thrown when a child sitemap can't be read; an empty string leaves it out). A child of a sitemap read from the web must be a web address: a `file:` or local path there counts as a child that can't be read. |
+| `loadText(source, fetcher, { notes })` | Returns the text of a local file or a URL. |
+| `parseRedirectMap(text)` | Returns `entries` (`{ old, new, line }`), `problems` (`{ line, message }`) and `delimiter`. |
+| `parseUrlList(text)` | Returns the URLs, one per line, without blank lines or `#` comments. |
+
+These names and members are a promise: they change only in a new minor version, with a CHANGELOG entry. Anything else in those files, and any file not listed here, is internal and may change in any release (Node refuses imports of files outside this list). A test fails if a subpath gains an export that is neither promised nor listed as internal.
+
 ## What it doesn't do
 
 - It doesn't run JavaScript, so redirects done in client-side JS or `<meta http-equiv="refresh">` aren't followed. (Google recommends server-side redirects where you can set them up: they're the type it's most likely to interpret correctly.)
@@ -327,7 +350,7 @@ await writeReports(run, 'redirect-report');
 
 ## Development
 
-Node.js 20 or newer, no runtime dependencies.
+Node.js 22 or newer, no runtime dependencies.
 
 ```bash
 npm test        # unit tests + end-to-end tests against the demo sites
