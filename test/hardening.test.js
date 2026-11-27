@@ -829,3 +829,50 @@ test('L3: cancelling while inputs load is reported as a cancel', async () => {
   };
   await assert.rejects(runCheck({ sitemaps: ['https://example.com/sitemap.xml'], fetcher, signal: controller.signal }), (err) => err.code === 'ECANCELLED');
 });
+
+test('L16 (planner QA): a sitemap index on the web can only point at web addresses, never a file here', async () => {
+  // A file the old code would have opened: "x:local.xml" parses as a URL with scheme x:,
+  // is not http, and was read as the relative path x:local.xml in the current folder.
+  const dir = await tmp();
+  await writeFile(join(dir, 'x:local.xml'), '<urlset><url><loc>https://s.example/from-this-computer</loc></url></urlset>');
+  const site = await serve({
+    '/index.xml': [200, { 'content-type': 'application/xml' }, `<sitemapindex>
+      <sitemap><loc>/pages.xml</loc></sitemap>
+      <sitemap><loc>x:local.xml</loc></sitemap>
+      <sitemap><loc>file:///etc/passwd</loc></sitemap>
+    </sitemapindex>`],
+    '/pages.xml': [200, { 'content-type': 'application/xml' }, '<urlset><url><loc>https://s.example/a</loc></url></urlset>'],
+  });
+  const fetcher = new Fetcher({ userAgent: 't', productToken: 't', delayMs: 0 });
+  await fetcher.trustHost(site.origin);
+  const cwd = process.cwd();
+  process.chdir(dir);
+  try {
+    await assert.rejects(loadSitemapUrls(`${site.origin}/index.xml`, fetcher, {}), /isn't a web address/);
+    const failures = [];
+    const urls = await loadSitemapUrls(`${site.origin}/index.xml`, fetcher, { allowPartial: true, failures });
+    assert.deepEqual(urls, ['https://s.example/a']);
+    assert.deepEqual(failures.map((f) => f.sitemap).sort(), ['file:///etc/passwd', 'x:local.xml']);
+    assert.ok(failures.every((f) => /isn't a web address/.test(f.reason)));
+  } finally {
+    process.chdir(cwd);
+    fetcher.close();
+    await site.close();
+  }
+  // A local index may still point at local files and at web addresses.
+  await writeFile(join(dir, 'pages.xml'), '<urlset><url><loc>https://s.example/b</loc></url></urlset>');
+  await writeFile(join(dir, 'index.xml'), '<sitemapindex><sitemap><loc>pages.xml</loc></sitemap></sitemapindex>');
+  assert.deepEqual(await loadSitemapUrls(join(dir, 'index.xml'), null, {}), ['https://s.example/b']);
+});
+
+test('L1 (planner QA): the hint at the end of the child-sitemap error is the caller\'s to set', async () => {
+  const dir = await tmp();
+  await writeFile(join(dir, 'index.xml'), '<sitemapindex><sitemap><loc>missing.xml</loc></sitemap></sitemapindex>');
+  await assert.rejects(loadSitemapUrls(join(dir, 'index.xml'), null, {}), /we stopped\. Re-run, or pass --allow-partial-sitemaps/);
+  await assert.rejects(loadSitemapUrls(join(dir, 'index.xml'), null, { partialHint: 'Try --other.' }), (err) => {
+    assert.match(err.message, /we stopped\. Try --other\.$/);
+    assert.doesNotMatch(err.message, /allow-partial/);
+    return true;
+  });
+  await assert.rejects(loadSitemapUrls(join(dir, 'index.xml'), null, { partialHint: '' }), /we stopped\.$/);
+});

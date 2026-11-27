@@ -163,12 +163,15 @@ export function parseSitemap(xml) {
   return { type, locs, malformed };
 }
 
+// What the stop message suggests; callers with other flags pass their own `partialHint`.
+const PARTIAL_HINT = 'Re-run, or pass --allow-partial-sitemaps to check the rest and report it as an error.';
+
 /**
  * Collect every page URL from a sitemap or sitemap index (followed recursively).
  * A child sitemap that can't be read stops the run, because its URLs would silently
  * go unchecked; with `allowPartial`, it is recorded in `failures` instead.
  */
-export async function loadSitemapUrls(source, fetcher, { notes = [], allowPartial = false, failures = [], confineTo = null, signal, entrySources = null } = {}) {
+export async function loadSitemapUrls(source, fetcher, { notes = [], allowPartial = false, failures = [], confineTo = null, signal, entrySources = null, partialHint = PARTIAL_HINT } = {}) {
   // entrySources: if given, receives { from, locs } per sitemap file read, so callers can tell
   // entries from a local file apart from entries a remote child sitemap supplied.
   // confineTo: a folder that local sitemap children must stay inside (the browser interface
@@ -178,6 +181,9 @@ export async function loadSitemapUrls(source, fetcher, { notes = [], allowPartia
   const seen = new Set();
   const urls = [];
   const queue = [source];
+  // Children listed by a sitemap fetched from the web. They must be web addresses too: a remote
+  // index must never make us open a file on this computer (file:///…, C:\…, a bare path).
+  const fromWeb = new Set();
   let failed = 0;
   while (queue.length) {
     const next = queue.shift();
@@ -189,6 +195,9 @@ export async function loadSitemapUrls(source, fetcher, { notes = [], allowPartia
     seen.add(next);
     let parsed;
     try {
+      if (fromWeb.has(next) && !isHttp(next)) {
+        throw new Error(`a sitemap on the web points at ${next}, which isn't a web address`);
+      }
       if (root && !isHttp(next) && next !== source && !resolve(next).startsWith(root)) {
         throw new Error('it points outside the files you picked; drop the child sitemaps together with the index');
       }
@@ -196,7 +205,7 @@ export async function loadSitemapUrls(source, fetcher, { notes = [], allowPartia
     } catch (err) {
       if (next === source) throw err; // the sitemap you named must load
       if (!allowPartial) {
-        throw new Error(`A child sitemap of ${source} could not be read (${err.message}). Its URLs would go unchecked, so we stopped. Re-run, or pass --allow-partial-sitemaps to check the rest and report it as an error.`);
+        throw new Error(`A child sitemap of ${source} could not be read (${err.message}). Its URLs would go unchecked, so we stopped.${partialHint ? ` ${partialHint}` : ''}`);
       }
       failed += 1;
       failures.push({ sitemap: next, parent: source, reason: err.message });
@@ -206,8 +215,10 @@ export async function loadSitemapUrls(source, fetcher, { notes = [], allowPartia
     if (parsed.type === 'index') {
       for (const loc of parsed.locs) {
         let child;
-        if (isHttp(next)) child = toUrl(loc, next)?.href ?? loc;
-        else if (isHttp(loc)) {
+        if (isHttp(next)) {
+          child = toUrl(loc, next)?.href ?? loc;
+          fromWeb.add(child);
+        } else if (isHttp(loc)) {
           child = loc;
           notes.push(`The local sitemap index ${next} points at ${loc}, which we fetched live. After launch that address may serve the new site's sitemap: save the child sitemaps too.`);
         } else child = resolve(dirname(next), loc);
