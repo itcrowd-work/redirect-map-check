@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.1 (unreleased)
+## 0.2.1 (28 November 2026)
 
 No code changes. Three options that already worked are now part of the promised API, for tools that run the checker's parts behind a browser interface (redirect-map-plan's `ui`):
 
