@@ -1,4 +1,4 @@
-// The package's public subpaths (0.2.0). Each promised name must exist; anything not in
+// The package's public subpaths (0.2.0; members added in 0.2.1). Each promised name must exist; anything not in
 // "exports" must stay unreachable, so internals can change without breaking other tools.
 
 import assert from 'node:assert/strict';
@@ -127,6 +127,50 @@ test('promised members: Fetcher, loadSitemapUrls, loadText and parseRedirectMap'
     fetcher.close();
     server.close();
     other.close();
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('promised members (0.2.1): Fetcher signal, loadSitemapUrls confineTo and signal, loadText signal', async () => {
+  const { Fetcher } = await import('redirect-map-check/http');
+  const { loadSitemapUrls, loadText } = await import('redirect-map-check/inputs');
+  // A page that never answers: only the signal can end the request.
+  const server = createServer(() => {});
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const dir = await mkdtemp(join(tmpdir(), 'rmc-exports-'));
+  const inside = join(dir, 'in');
+  const controller = new AbortController();
+  const fetcher = new Fetcher({ userAgent: 'test', productToken: 'test', delayMs: 0, timeoutMs: 60_000, retries: 0, respectRobots: false, signal: controller.signal });
+  try {
+    await fetcher.trustHost(base);
+    const started = Date.now();
+    const pending = fetcher.follow(`${base}/slow`, { wantBody: true });
+    setTimeout(() => controller.abort(), 100);
+    const res = await pending;
+    assert.equal(res.errorCode, 'ECANCELLED');
+    assert.ok(Date.now() - started < 5000, 'the request stops when the signal fires, not at the timeout');
+
+    // confineTo: a local index inside the folder may only point at local files inside it.
+    const { mkdir } = await import('node:fs/promises');
+    await mkdir(inside);
+    await writeFile(join(dir, 'outside.xml'), '<urlset><url><loc>https://example.com/outside</loc></url></urlset>');
+    await writeFile(join(inside, 'ok.xml'), '<urlset><url><loc>https://example.com/inside</loc></url></urlset>');
+    await writeFile(join(inside, 'index.xml'), `<sitemapindex><sitemap><loc>${join(inside, 'ok.xml')}</loc></sitemap><sitemap><loc>${join(dir, 'outside.xml')}</loc></sitemap></sitemapindex>`);
+    await assert.rejects(loadSitemapUrls(join(inside, 'index.xml'), null, { confineTo: inside }), /outside the files you picked/);
+    const failures = [];
+    assert.deepEqual(await loadSitemapUrls(join(inside, 'index.xml'), null, { confineTo: inside, allowPartial: true, failures }), ['https://example.com/inside']);
+    assert.equal(failures.length, 1);
+    assert.deepEqual([...(await loadSitemapUrls(join(inside, 'index.xml'), null, {}))].sort(), ['https://example.com/inside', 'https://example.com/outside'], 'without confineTo the index is followed');
+
+    // signal on local reads.
+    const aborted = AbortSignal.abort();
+    await assert.rejects(loadText(join(inside, 'ok.xml'), null, { signal: aborted }), (err) => err.name === 'AbortError');
+    await assert.rejects(loadSitemapUrls(join(inside, 'ok.xml'), null, { signal: aborted }));
+  } finally {
+    fetcher.close();
+    server.closeAllConnections?.();
+    server.close();
     await rm(dir, { recursive: true, force: true });
   }
 });
