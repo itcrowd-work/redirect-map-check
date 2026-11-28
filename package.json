@@ -1,6 +1,6 @@
 {
   "name": "redirect-map-check",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Check a website migration's 301 redirect map before and after launch: 404s, redirect chains, loops, 302s, redirects to the homepage or an unrelated page, and old URLs missing from the map.",
   "type": "module",
   "bin": {

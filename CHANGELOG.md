@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.1 (unreleased)
+
+No code changes. Three options that already worked are now part of the promised API, for tools that run the checker's parts behind a browser interface (redirect-map-plan's `ui`):
+
+- `Fetcher`: `signal`, to cancel waits and requests in flight (`follow` returns `ECANCELLED`).
+- `loadSitemapUrls`: `confineTo`, so a dropped sitemap index can only point at the other files dropped with it; and `signal`.
+- `loadText`: `signal`.
+
+A test now covers each of them.
+
 ## 0.2.0 (27 November 2026)
 
 - Requires Node.js 22 or newer (was 20). Node.js 20 reached end of life on 30 April 2026 and gets no more security fixes; CI now tests Node 22, 24 and 26.
